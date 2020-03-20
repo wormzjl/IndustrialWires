@@ -31,9 +31,9 @@ import javax.annotation.Nullable;
 
 public class MixedWireType extends WireType {
 	public static final String IC2_TIN_CAT = "IC_TIN";
-	public static final String IC2_COPPER_CAT = "IC_COPPER";
-	public static final String IC2_GOLD_CAT = "IC_GOLD";
-	public static final String IC2_HV_CAT = "IC_HV";
+	public static final String IC2_COPPER_CAT = "LV";
+	public static final String IC2_GOLD_CAT = "MV";
+	public static final String IC2_HV_CAT = "HV";
 	public static final String IC2_GLASS_CAT = "IC_GLASS";
 	private final int type;
 	private final int[] ic2Colors = {0xa5bcc7, 0xbc7945, 0xfeff73, 0xb9d6d9, 0xf1f1f1};
