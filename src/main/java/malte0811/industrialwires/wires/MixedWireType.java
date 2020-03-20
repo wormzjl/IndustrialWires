@@ -168,16 +168,7 @@ public class MixedWireType extends WireType {
 		return this==HV||this==GLASS;
 	}
 
-	public double getLoss(EnergyType energyType) {
-		switch (energyType) {
-
-			case FE_AC:
-				return getLossRatio();
-			case EU_DC:
-				return getLossRateEU();
-			case NONE:
-			default:
-				return 10;
-		}
+	public double getLoss() {
+		return getLossRatio();
 	}
 }

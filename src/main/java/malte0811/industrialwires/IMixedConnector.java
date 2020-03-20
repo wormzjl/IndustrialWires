@@ -17,14 +17,13 @@ package malte0811.industrialwires;
 import blusunrize.immersiveengineering.api.energy.wires.IImmersiveConnectable;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler;
 import malte0811.industrialwires.util.ConversionUtil;
-import malte0811.industrialwires.wires.EnergyType;
 import net.minecraft.entity.Entity;
 
 public interface IMixedConnector extends IImmersiveConnectable {
 	/**
 	 * @return leftover energy.
 	 */
-	double insertEnergy(double joules, boolean simulate, EnergyType type);
+	double insertEnergy(double joules, boolean simulate);
 
 	@Override
 	default float getDamageAmount(Entity e, ImmersiveNetHandler.Connection c)

@@ -41,7 +41,6 @@ import malte0811.industrialwires.network.MessageTileSyncIW;
 import malte0811.industrialwires.util.ConversionUtil;
 import malte0811.industrialwires.util.JouleEnergyStorage;
 import malte0811.industrialwires.util.MiscUtils;
-import malte0811.industrialwires.wires.EnergyType;
 import malte0811.industrialwires.wires.MixedWireType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -568,7 +567,7 @@ public class TileEntityMarx extends TileEntityIWMultiblock implements ITickable,
 	}
 
 	@Override
-	public double insertEnergy(double joules, boolean simulate, EnergyType type) {
+	public double insertEnergy(double joules, boolean simulate) {
 		TileEntityMarx master = master(this);
 		if (master!=null) {
 			double ret = master.storage.insert(joules, 1, simulate, master.leftover);

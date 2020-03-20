@@ -31,7 +31,6 @@ import malte0811.industrialwires.blocks.IBlockBoundsIW;
 import malte0811.industrialwires.compat.Compat;
 import malte0811.industrialwires.util.ConversionUtil;
 import malte0811.industrialwires.util.MiscUtils;
-import malte0811.industrialwires.wires.EnergyType;
 import malte0811.industrialwires.wires.MixedWireType;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -51,7 +50,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static malte0811.industrialwires.wires.EnergyType.*;
 import static malte0811.industrialwires.wires.MixedWireType.TIN;
 
 @Optional.InterfaceList({
@@ -72,7 +70,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 	private double bufferToMachine = 0;
 	private double externalInputInTick = 0;
 	private double maxToMachine = 0;
-	private EnergyType energyType = NONE;
+	//private EnergyType energyType = NONE;
 	private boolean shouldBreak = false;
 	private final double maxIO;
 	private final MixedWireType wireType;
@@ -135,9 +133,6 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 				}
 				return;
 			}
-			if (externalInputInTick ==0 && potentialIEInputInTick == 0 && bufferToNet == 0 && bufferToMachine == 0) {
-				energyType = NONE;
-			}
 			if (bufferToNet < maxToNet) {
 				maxToNet = bufferToNet;
 			}
@@ -161,7 +156,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 			if (bufferToNet >EPS) {
 				notifyAvailableEnergy(bufferToNet);
 			}
-			if (bufferToMachine > EPS && energyType==FE_AC) {
+			if (bufferToMachine > EPS) {
 				transferPowerToFEMachine();
 			}
 		}
@@ -177,7 +172,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 				IImmersiveConnectable iic = ApiUtils.toIIC(c.end, world);
 				if (iic instanceof IMixedConnector) {
 					double extract =
-							outputMax - ((IMixedConnector) iic).insertEnergy(outputMax, true, energyType);
+							outputMax - ((IMixedConnector) iic).insertEnergy(outputMax, true);
 					if (extract > EPS) {
 						maxOutputs.put(c, new ImmutablePair<>((IMixedConnector) iic, extract));
 						sum += extract;
@@ -191,11 +186,11 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 				Pair<IMixedConnector, Double> p = entry.getValue();
 				AbstractConnection c = entry.getKey();
 				double out = outputMax * p.getRight() / sum;
-				double loss = energyType.getLoss(getAverageLossRate(c), bufferToNet, out);
+				double loss = Math.min(getAverageLossRate(c), 1)*out;
 				out = Math.min(out, bufferToNet -loss);
 				if (out<=0)
 					continue;
-				double inserted = out - p.getLeft().insertEnergy(out, false, energyType);
+				double inserted = out - p.getLeft().insertEnergy(out, false);
 				double energyAtConn = inserted + loss;
 				bufferToNet -= energyAtConn;
 				float intermediaryLoss = 0;
@@ -203,7 +198,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 				for (Connection sub : c.subConnections) {
 					int transferredPerCon = transferedPerConn.getOrDefault(sub, 0);
 					energyAtConn -= sub.cableType.getLossRatio() * sub.length;
-					double wireLoad = energyAtConn/(energyType==FE_AC?IWConfig.wireRatio:1);
+					double wireLoad = energyAtConn;
 					transferedPerConn.put(sub, (int) (transferredPerCon + wireLoad));
 					IImmersiveConnectable subStart = ApiUtils.toIIC(sub.start, world);
 					IImmersiveConnectable subEnd = ApiUtils.toIIC(sub.end, world);
@@ -257,7 +252,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 		for (Connection c : conn.subConnections) {
 			WireType type = c.cableType;
 			if (type instanceof MixedWireType) {
-				f += c.length * ((MixedWireType)type).getLoss(energyType);
+				f += c.length * ((MixedWireType)type).getLoss();
 			} else {
 				f = Double.POSITIVE_INFINITY;
 			}
@@ -267,13 +262,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 
 	//Input through the net
 	@Override
-	public double insertEnergy(double joules, boolean simulate, EnergyType type) {
-		if (energyType==NONE) {
-			energyType = type;
-		} else if (energyType!=type) {
-			shouldBreak = true;
-			return 0;
-		}
+	public double insertEnergy(double joules, boolean simulate) {
 		double insert = Math.min(getMaxIO() - bufferToMachine, joules);
 		insert = Math.min(getMaxIO()-actualIEInputInTick, insert);
 		if (!simulate) {
@@ -287,7 +276,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 	}
 
 	private double getMaxIO() {
-		return maxIO*(energyType==FE_AC?IWConfig.wireRatio:1);
+		return maxIO;
 	}
 
 	@Override
@@ -364,24 +353,18 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 	@Override
 	@Optional.Method(modid="ic2")
 	public double injectEnergy(EnumFacing directionFrom, double amount, double voltage) {
-		return amount-ConversionUtil.euPerJoule()*addToIn(ConversionUtil.joulesPerEu()*amount, false, EU_DC);
+		return amount-ConversionUtil.euPerJoule()*addToIn(ConversionUtil.joulesPerEu()*amount, false);
 	}
 
 	@Override
 	@Optional.Method(modid="ic2")
 	public double getOfferedEnergy() {
-		if (energyType != NONE && energyType != EU_DC) {
-			return .01;
-		}
 		return Math.min(maxToMachine, bufferToMachine) * ConversionUtil.euPerJoule();
 	}
 
 	@Override
 	@Optional.Method(modid="ic2")
 	public void drawEnergy(double amount) {
-		if (energyType != NONE && energyType != EU_DC) {
-			shouldBreak = true;
-		}
 		bufferToMachine -= amount*ConversionUtil.joulesPerEu();
 		markDirty();
 	}
@@ -405,12 +388,7 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 	}
 
 	// Returns amount of energy consumed
-	private double addToIn(double joules, boolean simulate, EnergyType type) {
-		if (energyType==NONE) {
-			energyType = type;
-		} else if (energyType!=type) {
-			shouldBreak = true;
-		}
+	private double addToIn(double joules, boolean simulate) {
 		joules = Math.min(getMaxIO() - externalInputInTick + .5, joules);
 		if (bufferToNet < getMaxIO()) {
 			if (!simulate) {
@@ -442,7 +420,6 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 		} else {
 			maxToMachine = bufferToMachine;
 		}
-		energyType = EnergyType.values()[nbt.getInteger("energyType")];
 		if (version==0) {
 			bufferToNet *= ConversionUtil.joulesPerEu();
 			bufferToMachine *= ConversionUtil.joulesPerEu();
@@ -460,7 +437,6 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 		nbt.setDouble("outBuffer", bufferToMachine);
 		nbt.setDouble("maxToNet", maxToNet);
 		nbt.setDouble("maxToMachine", maxToMachine);
-		nbt.setInteger("energyType", energyType.ordinal());
 		nbt.setInteger("version", 1);
 	}
 
@@ -582,15 +558,12 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 				return 0;
 			}
 			double joules = maxReceive*ConversionUtil.joulesPerIf();
-			double accepted = addToIn(joules, simulate, FE_AC);
+			double accepted = addToIn(joules, simulate);
 			return MathHelper.ceil(accepted*ConversionUtil.ifPerJoule());
 		}
 
 		@Override
 		public int extractEnergy(int maxExtract, boolean simulate) {
-			if (energyType!=FE_AC) {
-				return 0;
-			}
 			double joules = maxExtract*ConversionUtil.joulesPerIf();
 			if (joules>maxToMachine) {
 				joules = maxToMachine;
