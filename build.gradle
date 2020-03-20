@@ -17,6 +17,7 @@ buildscript {
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'idea'
 
 /*
 // for people who want stable - not yet functional for MC 1.8.8 - we require the forgegradle 2.1 snapshot
@@ -32,7 +33,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 minecraft {
-    version = "1.12.2-14.23.5.2768"
+    version = "1.12.2-14.23.5.2847"
     runDir = "run"
 
     replace '${version}', project.version
@@ -82,9 +83,9 @@ repositories {
 }
 
 dependencies {
-    deobfCompile 'net.industrial-craft:industrialcraft-2:2.8.+'
+    compile 'net.industrial-craft:industrialcraft-2:2.8.+'
     deobfCompile "blusunrize:ImmersiveEngineering:0.12-+"
-    compileOnly "pl.asie.charset:charset:0.5.4.2.3:full"
+    compileOnly "pl.asie.charset:charset:0.5.6.4.19:full"
     //Project red and runtime dependencies
     compileOnly "project-red-base:ProjectRed-1.12.2:4.9.1.92:Base"
     //runtime "project-red-integration:ProjectRed-1.12.2:4.9.1.92:integration"
@@ -100,6 +101,7 @@ dependencies {
     // compileOnly 'com.elytradev:mirage:2.0.1-SNAPSHOT'
     compileOnly "mezz.jei:jei_1.12:4.+"
     compileOnly "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.8.460"
+    compile 'com.elytradev:mirage:2.0.3-rc3-SNAPSHOT'
 
 }
 
