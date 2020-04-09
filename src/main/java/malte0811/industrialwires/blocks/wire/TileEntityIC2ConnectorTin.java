@@ -20,6 +20,13 @@ import blusunrize.immersiveengineering.api.energy.wires.*;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler.AbstractConnection;
 import blusunrize.immersiveengineering.api.energy.wires.ImmersiveNetHandler.Connection;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IDirectionalTile;
+import com.cout970.magneticraft.api.core.INode;
+import com.cout970.magneticraft.api.energy.IElectricNode;
+import com.cout970.magneticraft.api.energy.IElectricNodeHandler;
+import com.cout970.magneticraft.registry.CapabilitiesKt;
+import com.cout970.magneticraft.systems.config.Config;
+import gregtech.api.capability.GregtechCapabilities;
+import gregtech.api.capability.IEnergyContainer;
 import ic2.api.energy.tile.IEnergyAcceptor;
 import ic2.api.energy.tile.IEnergyEmitter;
 import ic2.api.energy.tile.IEnergySink;
@@ -41,6 +48,7 @@ import net.minecraft.util.math.*;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -158,6 +166,10 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 			}
 			if (bufferToMachine > EPS) {
 				transferPowerToFEMachine();
+				if (Loader.isModLoaded("gregtech"))
+					transferPowerToGTMachine();
+				if (Loader.isModLoaded("magneticraft"))
+					transferPowerToMagn();
 			}
 		}
 	}
@@ -221,6 +233,42 @@ public class TileEntityIC2ConnectorTin extends TileEntityImmersiveConnectable im
 			int outFE = MathHelper.floor(outJoules*ConversionUtil.ifPerJoule());
 			int received = handler.receiveEnergy(outFE, false);
 			bufferToMachine -= received*ConversionUtil.joulesPerIf();
+		}
+	}
+
+	private void transferPowerToGTMachine() {
+		BlockPos outPos = pos.offset(facing);
+		TileEntity te = MiscUtils.getLoadedTE(world, outPos, TileEntity.class);
+		if (te!=null && te.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, facing.getOpposite())) {
+			IEnergyContainer container = te.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, facing.getOpposite());
+			assert container!=null;
+			double outJoules = Math.min(bufferToMachine, maxToMachine*IWConfig.wireRatio);
+			long outEU = Math.min(MathHelper.floor(outJoules*ConversionUtil.euPerJoule()), container.getInputVoltage());
+			long received = container.addEnergy(outEU);
+			bufferToMachine -= received*ConversionUtil.joulesPerEu();
+		}
+	}
+
+	private void transferPowerToMagn() {
+		BlockPos outPos = pos.offset(facing);
+		TileEntity te = MiscUtils.getLoadedTE(world, outPos, TileEntity.class);
+		if (te!=null && te.hasCapability(CapabilitiesKt.getELECTRIC_NODE_HANDLER(), facing.getOpposite())) {
+			IElectricNodeHandler handler = te.getCapability(CapabilitiesKt.getELECTRIC_NODE_HANDLER(), facing.getOpposite());
+			assert handler!=null;
+			double outJoules = Math.min(bufferToMachine, maxToMachine*IWConfig.wireRatio);
+			int outRF = MathHelper.floor(outJoules*ConversionUtil.ifPerJoule());
+			IElectricNode node = null;
+			for (INode n : handler.getNodes()) {
+				if (n instanceof IElectricNode) {
+					node = (IElectricNode) n;
+					break;
+				}
+			}
+			if (node != null) {
+				double insertet = node.applyPower(outRF * Config.INSTANCE.getWattsToFE(), false);
+				bufferToMachine -= insertet/Config.INSTANCE.getWattsToFE();
+			}
+
 		}
 	}
 
