@@ -558,7 +558,7 @@ public class TileEntityMarx extends TileEntityIWMultiblock implements ITickable,
 	public int outputEnergy(int amount, boolean simulate, int energyType) {
 		TileEntityMarx master = master(this);
 		if (master!=null && amount>0) {
-			double ret = master.storage.insert(amount, ConversionUtil.joulesPerIf(), simulate, master.leftover);
+			double ret = master.storage.insert(amount, ConversionUtil.joulesPerIf()/IWConfig.HVStuff.marxmultiplier, simulate, master.leftover);
 			master.leftover -= ret;
 			return (int) ret;
 		} else {

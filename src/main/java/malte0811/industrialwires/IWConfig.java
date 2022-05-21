@@ -98,6 +98,8 @@ public class IWConfig {
 		public static int marxSoundDamage = 0;
 		@Comment({"Set to false to disable shaders. They are used for rendering the Marx generator and the Jacob's ladder."})
 		public static boolean enableShaders = true;
+		@Comment({"Marx generator power usage multiplier"})
+		public static double marxmultiplier = 1.0;
 	}
 
 	@SubscribeEvent
