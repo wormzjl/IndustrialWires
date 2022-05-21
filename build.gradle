@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 
 def mainVersion = "1.7"
-def buildNumber = "37"
+def buildNumber = "FA-01"
 
 // For those who want the bleeding edge
 buildscript {
@@ -87,7 +87,7 @@ dependencies {
     deobfCompile "blusunrize:ImmersiveEngineering:0.12-+"
     compileOnly "pl.asie.charset:charset:0.5.6.4.19:full"
     //Project red and runtime dependencies
-    compileOnly "project-red-base:ProjectRed-1.12.2:4.9.1.92:Base"
+    //compileOnly "project-red-base:ProjectRed-1.12.2:4.9.1.92:Base"
     //runtime "project-red-integration:ProjectRed-1.12.2:4.9.1.92:integration"
     //runtime "forge-multipart-cbe:ForgeMultipart-1.12.2:2.5.0.69:universal"
     //runtime "codechicken:CodeChickenLib:1.12.2-3.2.1.349:universal"
