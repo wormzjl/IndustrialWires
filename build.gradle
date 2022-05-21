@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 
 def mainVersion = "1.7"
-def buildNumber = "38"
+def buildNumber = "37"
 
 // For those who want the bleeding edge
 buildscript {
@@ -102,8 +102,6 @@ dependencies {
     compileOnly "mezz.jei:jei_1.12:4.+"
     compileOnly "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.8.460"
     compile 'com.elytradev:mirage:2.0.3-rc3-SNAPSHOT'
-    compile "gregtechce:gregtech:1.12.2:1.9.0.481"
-    compile "magneticraft:Magneticraft_1.12:2.8.2:dev"
 
 }
 
