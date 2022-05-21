@@ -352,7 +352,7 @@ public class TileEntityMechMB extends TileEntityIWMultiblock implements ITickabl
 			electrical.add(new int[]{lastEStart, mechanical.length});
 		}
 		electricalStartEnd = electrical.toArray(new int[electrical.size()][]);
-		decay = Math.pow(DECAY_BASE, mechanical.length);
+		decay = DECAY_BASE;
 		if (energyState!=null) {
 			energyState.invalid = true;
 		}
